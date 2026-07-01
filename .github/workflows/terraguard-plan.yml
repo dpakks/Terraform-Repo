@@ -1,0 +1,88 @@
+name: TerraGuard Terraform Plan
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      TERRAGUARD_WEBHOOK_URL: ${{ secrets.TERRAGUARD_WEBHOOK_URL }}
+
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Convert Terraform Plan to JSON
+        run: terraform show -json tfplan > tfplan.json
+
+      - name: Send Terraform Plan to TerraGuard
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REPO_NAME: ${{ github.repository }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: |
+          python - <<'PY'
+          import os
+          import json
+          import urllib.request
+
+          webhook_url = os.environ["TERRAGUARD_WEBHOOK_URL"]
+
+          with open("tfplan.json", "r", encoding="utf-8") as file:
+              terraform_plan = json.load(file)
+
+          payload = {
+              "pr_number": int(os.environ["PR_NUMBER"]),
+              "author": os.environ["PR_AUTHOR"],
+              "repo_name": os.environ["REPO_NAME"],
+              "branch_name": os.environ["BRANCH_NAME"],
+              "terraform_plan": terraform_plan
+          }
+
+          data = json.dumps(payload).encode("utf-8")
+
+          request = urllib.request.Request(
+              webhook_url,
+              data=data,
+              headers={
+                  "Content-Type": "application/json"
+              },
+              method="POST"
+          )
+
+          with urllib.request.urlopen(request) as response:
+              print("TerraGuard response status:", response.status)
+              print(response.read().decode("utf-8"))
+          PY
