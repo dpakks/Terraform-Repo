@@ -24,15 +24,13 @@ jobs:
       TERRAGUARD_WEBHOOK_URL: ${{ secrets.TERRAGUARD_WEBHOOK_URL }}
 
     steps:
-      - name: Checkout PR code
+      - name: Checkout Pull Request Code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
 
       - name: Terraform Init
         run: terraform init -input=false
@@ -41,7 +39,15 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -input=false -out=tfplan
+        run: |
+          terraform plan \
+            -input=false \
+            -out=tfplan \
+            -var="aws_region=${{ secrets.AWS_REGION }}" \
+            -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+            -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+            -var="instance_name=terraguard-test-ec2" \
+            -var="instance_type=t3.micro"
 
       - name: Convert Terraform Plan to JSON
         run: terraform show -json tfplan > tfplan.json
@@ -53,36 +59,32 @@ jobs:
           REPO_NAME: ${{ github.repository }}
           BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          python - <<'PY'
-          import os
+          python <<EOF
           import json
+          import os
           import urllib.request
 
-          webhook_url = os.environ["TERRAGUARD_WEBHOOK_URL"]
-
-          with open("tfplan.json", "r", encoding="utf-8") as file:
-              terraform_plan = json.load(file)
+          with open("tfplan.json", "r") as f:
+              plan = json.load(f)
 
           payload = {
               "pr_number": int(os.environ["PR_NUMBER"]),
               "author": os.environ["PR_AUTHOR"],
               "repo_name": os.environ["REPO_NAME"],
               "branch_name": os.environ["BRANCH_NAME"],
-              "terraform_plan": terraform_plan
+              "terraform_plan": plan
           }
 
-          data = json.dumps(payload).encode("utf-8")
-
-          request = urllib.request.Request(
-              webhook_url,
-              data=data,
+          req = urllib.request.Request(
+              os.environ["TERRAGUARD_WEBHOOK_URL"],
+              data=json.dumps(payload).encode(),
               headers={
-                  "Content-Type": "application/json"
+                  "Content-Type": "application/json",
+                  "ngrok-skip-browser-warning": "true"
               },
               method="POST"
           )
 
-          with urllib.request.urlopen(request) as response:
-              print("TerraGuard response status:", response.status)
-              print(response.read().decode("utf-8"))
-          PY
+          with urllib.request.urlopen(req) as response:
+              print(response.read().decode())
+          EOF

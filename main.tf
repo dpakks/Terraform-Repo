@@ -8,9 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region     = var.aws_region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  region = var.aws_region
 }
 
 data "aws_ami" "amazon_linux" {
@@ -36,7 +34,10 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    Name = "${var.instance_name}-sg"
+    Name        = "${var.instance_name}-sg"
+    Environment = "dev"
+    Owner       = "platform-team"
+    Project     = "terraguard"
   }
 }
 
@@ -45,5 +46,10 @@ resource "aws_instance" "ec2" {
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
-  
+  tags = {
+    Name        = var.instance_name
+    Environment = "dev"
+    Owner       = "platform-team"
+    Project     = "terraguard"
+  }
 }
