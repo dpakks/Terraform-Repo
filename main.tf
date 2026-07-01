@@ -32,20 +32,10 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-sg"
-  }
 }
 
 resource "aws_instance" "ec2" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = var.instance_name
-  }
 }
