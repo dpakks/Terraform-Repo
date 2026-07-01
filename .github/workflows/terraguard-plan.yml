@@ -43,21 +43,19 @@ jobs:
           terraform plan \
             -input=false \
             -out=tfplan \
-            -var="aws_region=${{ secrets.AWS_REGION }}" \
-            -var="instance_name=terraguard-test-ec2" \
-            -var="instance_type=t3.micro"
+            -var="aws_region=${{ secrets.AWS_REGION }}"
 
       - name: Convert Terraform Plan to JSON
         run: terraform show -json tfplan > tfplan.json
 
-      - name: Send Terraform Plan to TerraGuard
+      - name: Send Terraform Plan + Source Files to TerraGuard
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           REPO_NAME: ${{ github.repository }}
           BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          python <<EOF
+          python <<'EOF'
           import json
           import os
           import urllib.request
@@ -65,12 +63,21 @@ jobs:
           with open("tfplan.json", "r") as f:
               plan = json.load(f)
 
+          # Read the raw source files Agent 2 will rewrite.
+          # Add any new .tf files here if the repo grows.
+          source_files = {}
+          for path in ["main.tf", "variables.tf"]:
+              if os.path.exists(path):
+                  with open(path, "r") as sf:
+                      source_files[path] = sf.read()
+
           payload = {
               "pr_number": int(os.environ["PR_NUMBER"]),
               "author": os.environ["PR_AUTHOR"],
               "repo_name": os.environ["REPO_NAME"],
               "branch_name": os.environ["BRANCH_NAME"],
-              "terraform_plan": plan
+              "terraform_plan": plan,
+              "terraform_files": source_files
           }
 
           req = urllib.request.Request(

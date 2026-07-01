@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region     = var.aws_region
+  region = var.aws_region
 }
 
 data "aws_ami" "amazon_linux" {
@@ -34,7 +34,8 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    Name = "${var.instance_name}-sg"
+    ManagedBy = "TerraGuard"
+    Name      = "${var.instance_name}-sg"
   }
 }
 
@@ -44,6 +45,7 @@ resource "aws_instance" "ec2" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
-    Name = var.instance_name
+    ManagedBy = "TerraGuard"
+    Name      = var.instance_name
   }
 }
