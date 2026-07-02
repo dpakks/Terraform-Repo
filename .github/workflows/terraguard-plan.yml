@@ -15,6 +15,8 @@ permissions:
 
 jobs:
   terraform-plan:
+    # Do NOT re-review TerraGuard's own fix PRs (prevents an Agent1->Agent2->Agent1 loop)
+    if: ${{ !startsWith(github.event.pull_request.head.ref, 'terraguard/') }}
     runs-on: ubuntu-latest
 
     env:
