@@ -21,12 +21,20 @@ resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
+
+  tags = {
+    ManagedBy = "TerraGuard - Testing"
+    Name      = "${var.instance_name}-vpc"
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
-
+  tags = {
+    ManagedBy = "TerraGuard"
+    Name      = "${var.instance_name}-igw"
+  }
 }
 
 resource "aws_subnet" "public" {
@@ -35,7 +43,10 @@ resource "aws_subnet" "public" {
   availability_zone       = var.availability_zone
   map_public_ip_on_launch = true
 
-
+  tags = {
+    ManagedBy = "TerraGuard"
+    Name      = "${var.instance_name}-public-subnet"
+  }
 }
 
 resource "aws_route_table" "public" {
@@ -46,7 +57,10 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.igw.id
   }
 
-
+  tags = {
+    ManagedBy = "TerraGuard"
+    Name      = "${var.instance_name}-public-rt"
+  }
 }
 
 resource "aws_route_table_association" "public" {
@@ -79,15 +93,21 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  tags = {
+    ManagedBy = "TerraGuard"
+  }
 }
 
 resource "aws_instance" "ec2" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
-
+  tags = {
+    ManagedBy = "TerraGuard"
+    Name      = var.instance_name
+  }
 }
 
 # ---------------- S3 (private, for testing Rule 3) ----------------
@@ -99,7 +119,9 @@ resource "random_id" "bucket_suffix" {
 resource "aws_s3_bucket" "data" {
   bucket = "${var.s3_bucket_prefix}-${random_id.bucket_suffix.hex}"
 
-
+  tags = {
+    ManagedBy = "TerraGuard"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "data" {
