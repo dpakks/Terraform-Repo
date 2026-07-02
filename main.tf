@@ -47,26 +47,11 @@ data "aws_ami" "amazon_linux" {
 
 resource "aws_instance" "ec2" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
+  instance_type = var.instance_type
   subnet_id     = aws_subnet.main.id
 
   tags = {
     ManagedBy = "TerraGuard"
     Name      = var.instance_name
   }
-}
-
-resource "aws_s3_bucket" "example" {
-  bucket = "my-example-bucket"
-  acl    = "private"
-
-  tags = {
-    ManagedBy = "TerraGuard"
-  }
-
-  # Public access block settings
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
 }
