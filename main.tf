@@ -22,19 +22,11 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-vpc"
-  }
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-igw"
-  }
 }
 
 resource "aws_subnet" "public" {
@@ -43,10 +35,6 @@ resource "aws_subnet" "public" {
   availability_zone       = var.availability_zone
   map_public_ip_on_launch = true
 
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-public-subnet"
-  }
 }
 
 resource "aws_route_table" "public" {
@@ -57,10 +45,6 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.igw.id
   }
 
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-public-rt"
-  }
 }
 
 resource "aws_route_table_association" "public" {
@@ -93,9 +77,7 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    ManagedBy = "TerraGuard"
-  }
+
 }
 
 resource "aws_instance" "ec2" {
@@ -104,10 +86,7 @@ resource "aws_instance" "ec2" {
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = var.instance_name
-  }
+
 }
 
 # ---------------- S3 (private, for testing Rule 3) ----------------
@@ -119,16 +98,13 @@ resource "random_id" "bucket_suffix" {
 resource "aws_s3_bucket" "data" {
   bucket = "${var.s3_bucket_prefix}-${random_id.bucket_suffix.hex}"
 
-  tags = {
-    ManagedBy = "TerraGuard"
-  }
 }
 
 resource "aws_s3_bucket_public_access_block" "data" {
   bucket = aws_s3_bucket.data.id
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
