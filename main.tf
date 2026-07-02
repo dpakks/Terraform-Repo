@@ -7,10 +7,6 @@ terraform {
   }
 }
 
-data "aws_vpc" "selected" {
-  default = true   # or filter by tag/id for a specific VPC
-}
-
 provider "aws" {
   region = var.aws_region
 }
@@ -28,7 +24,6 @@ data "aws_ami" "amazon_linux" {
 resource "aws_security_group" "ec2_sg" {
   name        = "${var.instance_name}-sg"
   description = "Basic security group for EC2"
-  vpc_id      = data.aws_vpc.selected.id
 
   egress {
     description = "Allow all outbound traffic"
