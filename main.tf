@@ -94,7 +94,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    ManagedBy = "TerraGuard"
+    ManagedBy = "TerraGuard - Testing"
   }
 }
 
