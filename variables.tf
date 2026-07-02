@@ -13,7 +13,7 @@ variable "instance_name" {
 variable "instance_type" {
   description = "EC2 instance type (policy requires t2.micro)"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.2xlarge"
 }
 
 variable "vpc_cidr" {
