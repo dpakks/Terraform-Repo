@@ -38,7 +38,7 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    ManagedBy = "TerraGuard"
+    ManagedBy = "TerraGuard - built for testing purpose"
   }
 }
 
@@ -47,6 +47,6 @@ resource "aws_instance" "ec2" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   tags = {
-    ManagedBy = "TerraGuard"
+    ManagedBy = "TerraGuard - built for testing purpose"
   }
 }
