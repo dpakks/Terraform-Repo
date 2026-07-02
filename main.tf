@@ -83,11 +83,12 @@ resource "aws_security_group" "ec2_sg" {
 
 resource "aws_instance" "ec2" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-
-
+  tags = {
+    ManagedBy = "TerraGuard"
+  }
 }
 
 # ---------------- S3 (private, for testing Rule 3) ----------------
@@ -98,8 +99,9 @@ resource "random_id" "bucket_suffix" {
 
 resource "aws_s3_bucket" "data" {
   bucket = "${var.s3_bucket_prefix}-${random_id.bucket_suffix.hex}"
-
-
+  tags = {
+    ManagedBy = "TerraGuard"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "data" {
