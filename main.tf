@@ -29,7 +29,7 @@ resource "aws_subnet" "main" {
 
   tags = {
     ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-subnet"
+    Name      = "${var.instance_name}-subnetttt"
   }
 }
 
