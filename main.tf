@@ -29,7 +29,7 @@ resource "aws_subnet" "main" {
 
   tags = {
     ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-subnett"
+    Name      = "${var.instance_name}-subnet"
   }
 }
 
@@ -47,11 +47,25 @@ data "aws_ami" "amazon_linux" {
 
 resource "aws_instance" "ec2" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = var.instance_type
+  instance_type = "t2.micro"
   subnet_id     = aws_subnet.main.id
 
   tags = {
     ManagedBy = "TerraGuard"
     Name      = var.instance_name
+  }
+}
+
+resource "aws_s3_bucket" "my_bucket" {
+  bucket = "my-private-bucket"
+  acl    = "private"
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+
+  tags = {
+    ManagedBy = "TerraGuard"
   }
 }
