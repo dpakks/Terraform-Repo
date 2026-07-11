@@ -39,22 +39,14 @@ resource "aws_subnet" "main" {
 
 # ---------------- EC2 ----------------
 
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-}
-
 resource "aws_instance" "ec2" {
-  ami           = data.aws_ami.amazon_linux.id
+  ami           = "ami-090cf75cac1183faa"
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.main.id
+
   tags = {
     ManagedBy = "TerraGuard"
+    Name      = var.instance_name
   }
 }
 
