@@ -35,7 +35,13 @@ variable "availability_zone" {
 }
 
 variable "s3_bucket_prefix" {
-  description = "Prefix for the S3 bucket name (random suffix appended for uniqueness)"
+  description = "Prefix for the primary S3 bucket name (random suffix appended for uniqueness)"
   type        = string
   default     = "terraguard-demo"
+}
+
+variable "logs_bucket_prefix" {
+  description = "Prefix for the additional (logs) S3 bucket name (random suffix appended for uniqueness)"
+  type        = string
+  default     = "terraguard-logs"
 }
