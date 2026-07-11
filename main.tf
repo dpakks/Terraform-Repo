@@ -39,8 +39,18 @@ resource "aws_subnet" "main" {
 
 # ---------------- EC2 ----------------
 
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+}
+
 resource "aws_instance" "ec2" {
-  ami           = "ami-090cf75cac1183faa"
+  ami           = data.aws_ami.amazon_linux.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.main.id
 
@@ -50,7 +60,7 @@ resource "aws_instance" "ec2" {
   }
 }
 
-# ---------------- S3 (private baseline) ----------------
+# ---------------- S3: primary bucket (private baseline) ----------------
 
 resource "random_id" "bucket_suffix" {
   byte_length = 4
@@ -67,6 +77,30 @@ resource "aws_s3_bucket" "data" {
 
 resource "aws_s3_bucket_public_access_block" "data" {
   bucket = aws_s3_bucket.data.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# ---------------- S3: additional bucket (private) ----------------
+
+resource "random_id" "logs_bucket_suffix" {
+  byte_length = 4
+}
+
+resource "aws_s3_bucket" "logs" {
+  bucket = "${var.logs_bucket_prefix}-${random_id.logs_bucket_suffix.hex}"
+
+  tags = {
+    ManagedBy = "TerraGuard"
+    Name      = "${var.instance_name}-logs-bucket"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "logs" {
+  bucket = aws_s3_bucket.logs.id
 
   block_public_acls       = true
   block_public_policy     = true
