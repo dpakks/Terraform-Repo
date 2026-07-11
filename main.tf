@@ -83,27 +83,3 @@ resource "aws_s3_bucket_public_access_block" "data" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
-
-# ---------------- S3: additional bucket (private) ----------------
-
-resource "random_id" "logs_bucket_suffix" {
-  byte_length = 4
-}
-
-resource "aws_s3_bucket" "logs" {
-  bucket = "${var.logs_bucket_prefix}-${random_id.logs_bucket_suffix.hex}"
-
-  tags = {
-    ManagedBy = "TerraGuard"
-    Name      = "${var.instance_name}-logs-bucket"
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "logs" {
-  bucket = aws_s3_bucket.logs.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
