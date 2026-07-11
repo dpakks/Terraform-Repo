@@ -51,7 +51,7 @@ data "aws_ami" "amazon_linux" {
 
 resource "aws_instance" "ec2" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = var.instance_type
+  instance_type = "t2.micro"
   subnet_id     = aws_subnet.main.id
 
   tags = {
