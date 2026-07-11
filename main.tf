@@ -39,21 +39,26 @@ resource "aws_subnet" "main" {
 
 # ---------------- EC2 ----------------
 
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
+# data "aws_ami" "amazon_linux" {
+#   most_recent = true
+#   owners      = ["amazon"]
 
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-}
+#   filter {
+#     name   = "name"
+#     values = ["al2023-ami-*-x86_64"]
+#   }
+# }
 
-resource "aws_instance" "ec2" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = var.instance_type
-  subnet_id     = aws_subnet.main.id
-}
+# resource "aws_instance" "ec2" {
+#   ami           = data.aws_ami.amazon_linux.id
+#   instance_type = var.instance_type
+#   subnet_id     = aws_subnet.main.id
+
+#   tags = {
+#     ManagedBy = "TerraGuard"
+#     Name      = var.instance_name
+#   }
+# }
 
 # ---------------- S3 (private baseline) ----------------
 
@@ -73,8 +78,8 @@ resource "aws_s3_bucket" "data" {
 resource "aws_s3_bucket_public_access_block" "data" {
   bucket = aws_s3_bucket.data.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
